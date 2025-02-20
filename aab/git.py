@@ -62,14 +62,16 @@ class Git(object):
         logging.info("Exporting Git archive...")
         if not outdir or not version:
             return False
+
+        outdir = str(outdir).replace('\\', '/')
         if version == "dev":
             # https://stackoverflow.com/a/12010656
             cmd = (
                 "stash=`git stash create`; git archive --format tar $stash |"
-                " tar -x -C {outdir}/".format(outdir=outdir)
+                " tar -x -C \"{outdir}\"".format(outdir=outdir)
             )
         else:
-            cmd = "git archive --format tar {vers} | tar -x -C {outdir}/".format(
+            cmd = "git archive --format tar {vers} | tar -x -C \"{outdir}\"".format(
                 vers=version, outdir=outdir
             )
         return call_shell(cmd)

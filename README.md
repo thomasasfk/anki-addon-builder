@@ -1,3 +1,12 @@
+[![Cross-Platform Python Unit Tests and Add-on Build](https://github.com/thomasasfk/anki-addon-builder/actions/workflows/python-tests-and-addon-build.yml/badge.svg)](https://github.com/thomasasfk/anki-addon-builder/actions/workflows/python-tests-and-addon-build.yml)
+
+⚠ Cross-platform fork, tested on Windows, Ubuntu, and macOS on Python 3.8-3.10.
+
+Validated by building [highlight-search-results](https://github.com/glutanimate/highlight-search-results/tree/v1.0.1) (v1.0.1) across all platforms.
+
+---
+
+
 ## Anki Add-on Builder
 
 <a title="License: GNU AGPLv3" href="https://github.com/glutanimate/anki-addon-builder/blob/master/LICENSE"><img  src="https://img.shields.io/badge/license-GNU AGPLv3-green.svg"></a>

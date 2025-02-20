@@ -40,7 +40,6 @@ from aab.legacy import (
 )
 
 from . import SAMPLE_PROJECT_NAME, SAMPLE_PROJECT_ROOT
-from .util import list_files
 
 _qrc_sample_resources = [
     QResourceDescriptor(
@@ -95,15 +94,14 @@ initialize_qt_resources()
 
     assert actual_migration_snippet == expected_integration_snippet
 
-    expected_file_structure = """\
-gui/
-    resources/
-        sample-project/
-            icons/
-                coffee.svg
-                heart.svg
-                email.svg
-                help.svg\
-"""
+    expected_paths = {
+        Path('resources/sample-project/icons/coffee.svg'),
+        Path('resources/sample-project/icons/email.svg'),
+        Path('resources/sample-project/icons/heart.svg'),
+        Path('resources/sample-project/icons/help.svg'),
+    }
 
-    assert expected_file_structure == list_files(gui_src_path)
+    actual_paths = set(Path(p) for p in gui_src_path.rglob('*') if p.is_file())
+    actual_paths = {p.relative_to(gui_src_path) for p in actual_paths}
+
+    assert expected_paths == actual_paths, "Issue with GUI file structure"

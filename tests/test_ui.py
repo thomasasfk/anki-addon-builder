@@ -39,7 +39,6 @@ from aab.config import Config
 from aab.ui import QtVersion, UIBuilder
 
 from . import SAMPLE_PROJECT_NAME, SAMPLE_PROJECT_ROOT, SAMPLE_PROJECTS_FOLDER
-from .util import list_files
 
 
 @contextlib.contextmanager
@@ -58,25 +57,18 @@ def test_ui_builder(tmp_path: Path):
 
     gui_src_path = test_project_root / "src" / "sample_project" / "gui"
 
-    expected_file_structure = """\
-gui/
-    resources/
-        __init__.py
-        sample-project/
-            icons/
-                coffee.svg
-                heart.svg
-                email.svg
-                help.svg
-    forms/
-        __init__.py
-        qt6/
-            __init__.py
-            dialog.py
-        qt5/
-            __init__.py
-            dialog.py\
-"""
+    expected_paths = {
+        Path('forms/__init__.py'),
+        Path('forms/qt5/__init__.py'),
+        Path('forms/qt5/dialog.py'),
+        Path('forms/qt6/__init__.py'),
+        Path('forms/qt6/dialog.py'),
+        Path('resources/__init__.py'),
+        Path('resources/sample-project/icons/coffee.svg'),
+        Path('resources/sample-project/icons/email.svg'),
+        Path('resources/sample-project/icons/heart.svg'),
+        Path('resources/sample-project/icons/help.svg'),
+    }
 
     config = Config(test_project_root / "addon.json")
 
@@ -87,9 +79,10 @@ gui/
         ui_builder.build(QtVersion.qt6)
         ui_builder.create_qt_shim()
 
-    assert (
-        list_files(gui_src_path) == expected_file_structure
-    ), "Issue with GUI file structure"
+    actual_paths = set(Path(p) for p in gui_src_path.rglob('*') if p.is_file())
+    actual_paths = {p.relative_to(gui_src_path) for p in actual_paths}
+
+    assert expected_paths == actual_paths, "Issue with GUI file structure"
 
     with (gui_src_path / "forms" / "qt6" / "dialog.py").open("r") as f:
         qt6_form_contents = f.read()
@@ -129,17 +122,13 @@ def test_resources_only_no_forms(tmp_path: Path):
 
     gui_src_path = test_project_root / "src" / "sample_project" / "gui"
 
-    expected_file_structure = """\
-gui/
-    resources/
-        __init__.py
-        sample-project/
-            icons/
-                coffee.svg
-                heart.svg
-                email.svg
-                help.svg\
-"""
+    expected_paths = {
+        Path('resources/__init__.py'),
+        Path('resources/sample-project/icons/coffee.svg'),
+        Path('resources/sample-project/icons/email.svg'),
+        Path('resources/sample-project/icons/heart.svg'),
+        Path('resources/sample-project/icons/help.svg'),
+    }
 
     config = Config(test_project_root / "addon.json")
 
@@ -150,6 +139,7 @@ gui/
         assert ui_builder.build(QtVersion.qt6) is False
         assert ui_builder.create_qt_shim() is False
 
-    assert (
-        list_files(gui_src_path) == expected_file_structure
-    ), "Issue with GUI file structure"
+    actual_paths = set(Path(p) for p in gui_src_path.rglob('*') if p.is_file())
+    actual_paths = {p.relative_to(gui_src_path) for p in actual_paths}
+
+    assert expected_paths == actual_paths, "Issue with GUI file structure"

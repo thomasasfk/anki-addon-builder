@@ -1,0 +1,91 @@
+name: Cross-Platform Python Unit Tests and Add-on Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install pipx
+        pipx install poetry
+
+    - name: Configure Poetry
+      shell: bash
+      run: poetry config virtualenvs.in-project true
+
+    - name: Cache Poetry virtualenv
+      uses: actions/cache@v4
+      id: cache
+      with:
+        path: ./.venv
+        key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: poetry install --no-interaction
+
+    - name: Install and run pytest
+      shell: bash
+      run: |
+        poetry run pip install pytest PyQt5 PyQt6
+        poetry run python -m pytest
+
+  build-addon:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    - name: Install addon builder
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          pip install git+https://github.com/thomasasfk/anki-addon-builder@${{ github.head_ref }}
+        else
+          pip install git+https://github.com/thomasasfk/anki-addon-builder@main
+        fi
+
+    - name: Clone test addon
+      shell: bash
+      run: |
+        git clone https://github.com/glutanimate/highlight-search-results.git
+        cd highlight-search-results
+        git checkout v1.0.1
+
+    - name: Build addon
+      shell: bash
+      run: |
+        cd highlight-search-results
+        aab build
